@@ -7,31 +7,12 @@
 // 7. npm start
 // 8. Browse to http://localhost:8080/dist/
 
-const webpack = require('webpack')
 const path = require('path')
 
 module.exports = {
-  context: path.resolve(__dirname, 'src'),
-  entry: 'index.js',
+  entry: './src/index.js',
   output: {
-    path: path.resolve(__dirname, 'build'),
-    filename: 'build.min.js'
-  },
-  module: {
-    loaders: [
-      {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        loader: 'babel',
-        query: {
-          presets: ['es2015']
-        }
-      }
-    ]
-  },
-  plugins: [
-    new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
-    })
-  ]
-}
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'bundle.js'
+  }
+};

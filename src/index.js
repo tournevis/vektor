@@ -12,6 +12,7 @@ export class Vektor {
       this.z = z || 0
     }
   }
+
   add(x, y, z) {
     if (x instanceof Vektor) {
       this.x += x.x || 0
@@ -29,6 +30,7 @@ export class Vektor {
     this.z += z || 0
     return this
   }
+
   sub(x, y, z) {
     if (x instanceof Vektor) {
       this.x -= x.x || 0
@@ -46,6 +48,7 @@ export class Vektor {
     this.z -= z || 0
     return this
   }
+  
   mult(n) {
     if (!(typeof n === 'number')) {
       console.warn(

@@ -1,6 +1,6 @@
 'use strict';
 
-export class Vektor {
+export default class Vektor {
   constructor(x, y, z) {
     if (x instanceof Array) {
       this.x = arguments[0] || 0
@@ -74,6 +74,21 @@ export class Vektor {
     this.y *= n;
     this.z *= n;
     return this;
+  }
+  limit(max) {
+    this.x = Math.min(this.x, max)
+    this.y = Math.min(this.y, max)
+    this.z = Math.min(this.z, max)
+    return this
+  }
+  hypot (x, y, z) {
+    if (x instanceof Vektor) {
+      return Math.hypot(this.x, this.y, this.z)   
+    }
+    if (x instanceof Vektor) {
+      return Math.hypot(x.x || 0, x.y || 0, x.z || 0)   
+    }
+    return Math.hypot(x || 0, y || 0, z || 0)
   }
   dot(x, y, z) {
     if (x instanceof Vektor) {

@@ -70,16 +70,44 @@ export default class Vektor {
       )
       return this
     }
-    this.x *= n;
-    this.y *= n;
-    this.z *= n;
+    this.x /= n;
+    this.y /= n;
+    this.z /= n;
     return this;
   }
-  limit(max) {
+  scaleMag (n) {
+    return this.normalize().mult(n)
+  }
+  len () {
+    return Math.sqrt(this.lenSq());
+  }
+
+  normalize () {
+    var len = this.len();
+    // here we multiply by the reciprocal instead of calling 'div()'
+    // since div duplicates this zero check.
+    if (len !== 0) this.mult(1 / len);
+    return this;
+  }
+  lenSq () {
+    var x = this.x;
+    var y = this.y;
+    var z = this.z;
+    return x * x + y * y + z * z;
+  }
+  max(max) {
     this.x = Math.min(this.x, max)
     this.y = Math.min(this.y, max)
     this.z = Math.min(this.z, max)
     return this
+  }
+  limit (max) {
+     var mSq = this.lenSq();
+      if (mSq > max * max) {
+        this.div(Math.sqrt(mSq)) //normalize it
+          .mult(max);
+      }
+      return this;
   }
   hypot (x, y, z) {
     if (x instanceof Vektor) {

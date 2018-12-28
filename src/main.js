@@ -1,4 +1,4 @@
-import vektor from './index.js'
+import { vektor, dist } from './lib/index.js'
 import Particle from './particle.js'
 let ctx , canvas
 let PARTICLES_ARRAY = []

@@ -6,8 +6,8 @@ export default class particle {
 	    //this.velocity = p5.Vector.random2D();
 	    this.ctx = ctx;
 	    this.acceleration = new Vektor(0, 0)
-	    this.maxForce = 0.08;
-	    this.maxSpeed = 6;
+	    this.maxForce = 1;
+	    this.maxSpeed = 4;
 	    this.radius = Math.random() * 6
 	    this.acceleration = new Vektor(0, 0)
 	    this.velocity = new Vektor(Math.random() * 10 -5, Math.random() * 10 - 5)
@@ -22,21 +22,63 @@ export default class particle {
 		this.ctx.stroke();
 	}
 	align(particles) {
-	    let perceptionRadius = 15;
+	    let perceptionRadius = 80;
 	    let steering = new Vektor(0, 0)
 	    let total = 0;
 	    for (let other of particles) {
-	      let d = dist(this.position.x, this.position.y, other.position.x, other.position.y);
-	      if (other != this && d < perceptionRadius) {
-	        steering.add(other.velocity);
-	        total++;
-	      }
+			let d = dist(this.position.x, this.position.y, other.position.x, other.position.y);
+			if (other != this && d < perceptionRadius) {
+				steering.add(other.velocity);
+				total++;
+			}
 	    }
 	    if (total > 0) {
-	      steering.div(total);
-	      steering.sub(this.velocity);
-	      steering.scaleMag(this.maxSpeed);
-	      steering.limit(this.maxForce);
+		    steering.div(total);
+		    steering.scaleMag(this.maxSpeed);
+		    steering.sub(this.velocity);
+		    steering.limit(this.maxForce);
+	    }
+	    return steering;
+	}
+	cohesion(particles) {
+	    let perceptionRadius = 100;
+	    let steering = new Vektor(0, 0)
+	    let total = 0;
+	    for (let other of particles) {
+			let d = dist(this.position.x, this.position.y, other.position.x, other.position.y);
+			if (other != this && d < perceptionRadius) {
+				steering.add(other.position);
+				total++;
+			}
+	    }
+	    if (total > 0) {
+		    steering.div(total);
+		    steering.sub(this.position);
+		  	steering.scaleMag(this.maxSpeed);
+		  	steering.sub(this.velocity);
+		    steering.limit(this.maxForce);
+	    }
+	    return steering;
+	}
+	separation(particles) {
+	    let perceptionRadius = 50;
+	    let steering = new Vektor(0, 0)
+	    let total = 0;
+	    for (let other of particles) {
+			let d = dist(this.position.x, this.position.y, other.position.x, other.position.y);
+			if (other != this && d < perceptionRadius) {
+				let diff = new Vektor(this.position.x, this.position.y)
+				diff.sub(other.position.x, other.position.y)
+				diff.div(d * d)
+				steering.add(diff)
+				total++;
+			}
+	    }
+	    if (total > 0) {
+		    steering.div(total);
+		  	steering.scaleMag(this.maxSpeed);
+		  	steering.sub(this.velocity);
+		    steering.limit(this.maxForce * 1.1);
 	    }
 	    return steering;
 	}
@@ -54,8 +96,11 @@ export default class particle {
 	}
 	compute (paricules) {
     	let alignment = this.align(paricules)
-
+    	let cohesion = this.cohesion(paricules)
+    	let separation = this.separation(paricules)
     	this.acceleration.add(alignment)
+    	this.acceleration.add(cohesion)
+    	this.acceleration.add(separation)
 	}
 	update () {
 		this.velocity.add(this.acceleration)

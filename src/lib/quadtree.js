@@ -47,8 +47,38 @@ export default class Quadtree {
       }
     }
   }
+  query (range, result) {
+    if (!result) {
+      result = []
+    }
+    if (!this.boundary.intersects(range)) {
+      return
+    } else {
+      for (let p of this.points) {
+        if (range.contains(p)) {
+          result.push(p);
+        }
+      }
+      if (this.divided) {
+        this.northwest.query(range, result);
+        this.northeast.query(range, result);
+        this.southwest.query(range, result);
+        this.southeast.query(range, result);
+      }
+      return result
+    }
+  }
   show (ctx) {
     if(!ctx) return;
+    ctx.strokeStyle ='#FF0000';
+    for (var i = 0; i < this.points.length; i++) {
+      let p = this.points[i]
+      ctx.beginPath();
+
+      ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+    ctx.strokeStyle ='#000';
     ctx.rect(this.boundary.x, this.boundary.y, this.boundary.width, this.boundary.height)
     ctx.stroke()
     if (this.divided){

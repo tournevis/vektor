@@ -1,11 +1,10 @@
 import { Vektor, dist, random, Quadtree } from './lib/index.js'
-import { Point, Rect } from './lib/geometry.js'
+import { Point, Rect,  Circle } from './lib/geometry.js'
 import Particle from './particle.js'
-let ctx , canvas, qTree
+let ctx , canvas, qTree, lastCalledTime
 let PARTICLES_ARRAY = []
 let  mousePos = new Point(0,0)
-const PARTICLE_NUM = 80
-
+const PARTICLE_NUM = 200
 
 let setup = () => {
  	canvas = document.createElement('canvas')
@@ -19,21 +18,18 @@ let setup = () => {
     mousePos.y = ev.clientY - rect.top
   })
  	ctx = canvas.getContext('2d')
+  for (var i = 0; i <= PARTICLE_NUM; i++) {
+  	PARTICLES_ARRAY.push(new Particle(Math.random() * 400,Math.random() * 400,ctx))
+  }
+  draw()
   /*
-   	for (var i = 0; i <= PARTICLE_NUM; i++) {
-   		PARTICLES_ARRAY.push(new Particle(ctx))
-   	}
-   	draw()
-  */
   let boundary = new Rect(10,10, 380, 380)
   qTree = new Quadtree(boundary, 8 )
   for (var i = 0; i < 190; i++) {
     let p = new Point(random(400), random(400))
-
     qTree.insert(p)
   }
-
-  rangeDraw()
+  rangeDraw()*/
 }
 
 document.addEventListener("DOMContentLoaded", setup)
@@ -56,14 +52,26 @@ let rangeDraw = () => {
   }
   window.requestAnimationFrame(rangeDraw)
 }
-let draw = () => {
 
+let draw = () => {
 	ctx.clearRect(0, 0, 400, 400);
+  let boundary = new Rect(0, 0, 400, 400)
+  qTree = new Quadtree(boundary, 6)
+  for (var i = PARTICLES_ARRAY.length - 1; i >= 0; i--) {
+    let p = PARTICLES_ARRAY[i]
+    let point = new Point(p.position.x, p.position.y, p)
+		p.edges()
+		p.update()
+    qTree.insert(point)
+		p.draw()
+  }
+
 	for (var i = PARTICLES_ARRAY.length - 1; i >= 0; i--) {
-		PARTICLES_ARRAY[i].edges()
-		PARTICLES_ARRAY[i].compute(PARTICLES_ARRAY)
-		PARTICLES_ARRAY[i].update()
-		PARTICLES_ARRAY[i].draw()
+    let p = PARTICLES_ARRAY[i]
+    var range = new Circle(p.position.x, p.position.y, 100)
+    var other = qTree.query(range)
+		p.compute(other)
 	}
+  qTree.show(ctx)
 	window.requestAnimationFrame(draw)
 }

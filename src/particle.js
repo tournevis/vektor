@@ -1,8 +1,8 @@
 import { Vektor, dist } from './lib/index.js'
 
 export default class particle {
-	constructor(ctx) {
-		this.position = this.createVector();
+	constructor(x, y, ctx) {
+			this.position =  new Vektor(x, y);
 	    //this.velocity = p5.Vector.random2D();
 	    this.ctx = ctx;
 	    this.acceleration = new Vektor(0, 0)
@@ -25,12 +25,13 @@ export default class particle {
 	    let perceptionRadius = 80;
 	    let steering = new Vektor(0, 0)
 	    let total = 0;
-	    for (let other of particles) {
-			let d = dist(this.position.x, this.position.y, other.position.x, other.position.y);
-			if (other != this && d < perceptionRadius) {
-				steering.add(other.velocity);
-				total++;
-			}
+	    for (let others of particles) {
+				let other = others.ref
+				let d = dist(this.position.x, this.position.y, other.position.x, other.position.y);
+				if (other != this && d < perceptionRadius) {
+					steering.add(other.velocity);
+					total++;
+				}
 	    }
 	    if (total > 0) {
 		    steering.div(total);
@@ -44,12 +45,13 @@ export default class particle {
 	    let perceptionRadius = 100;
 	    let steering = new Vektor(0, 0)
 	    let total = 0;
-	    for (let other of particles) {
-			let d = dist(this.position.x, this.position.y, other.position.x, other.position.y);
-			if (other != this && d < perceptionRadius) {
-				steering.add(other.position);
-				total++;
-			}
+	    for (let others of particles) {
+				let other = others.ref
+				let d = dist(this.position.x, this.position.y, other.position.x, other.position.y);
+				if (other != this && d < perceptionRadius) {
+					steering.add(other.position);
+					total++;
+				}
 	    }
 	    if (total > 0) {
 		    steering.div(total);
@@ -64,7 +66,8 @@ export default class particle {
 	    let perceptionRadius = 50;
 	    let steering = new Vektor(0, 0)
 	    let total = 0;
-	    for (let other of particles) {
+	    for (let others of particles) {
+			let other = others.ref
 			let d = dist(this.position.x, this.position.y, other.position.x, other.position.y);
 			if (other != this && d < perceptionRadius) {
 				let diff = new Vektor(this.position.x, this.position.y)
@@ -82,7 +85,7 @@ export default class particle {
 	    }
 	    return steering;
 	}
-	edges() {	
+	edges() {
 	    if (this.position.x > 400) {
 	      this.position.x = 0;
 	    } else if (this.position.x < 0) {

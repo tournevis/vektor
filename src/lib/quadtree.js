@@ -1,4 +1,4 @@
-import {Point, Rect} from './geometry.js'
+import {Point, Rect, Circle} from './geometry.js'
 
 export default class Quadtree {
   constructor (boundary, capacity) {
@@ -52,7 +52,7 @@ export default class Quadtree {
       result = []
     }
     if (!this.boundary.intersects(range)) {
-      return
+      return []
     } else {
       for (let p of this.points) {
         if (range.contains(p)) {
@@ -70,17 +70,11 @@ export default class Quadtree {
   }
   show (ctx) {
     if(!ctx) return;
+    ctx.save()
     ctx.strokeStyle ='#FF0000';
-    for (var i = 0; i < this.points.length; i++) {
-      let p = this.points[i]
-      ctx.beginPath();
-
-      ctx.arc(p.x, p.y, 2, 0, 2 * Math.PI);
-      ctx.stroke();
-    }
-    ctx.strokeStyle ='#000';
     ctx.rect(this.boundary.x, this.boundary.y, this.boundary.width, this.boundary.height)
     ctx.stroke()
+    ctx.restore()
     if (this.divided){
      this.northeast.show(ctx)
      this.northwest.show(ctx)

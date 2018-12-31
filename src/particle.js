@@ -1,25 +1,45 @@
-import { Vektor, dist } from './lib/index.js'
+import { Vektor, dist, random } from './lib/index.js'
 
 export default class particle {
-	constructor(x, y, ctx) {
+	constructor(x, y, ctx, edge) {
 			this.position =  new Vektor(x, y);
-	    //this.velocity = p5.Vector.random2D();
+	    this.lastPosLength = 4
+	    this.lastPos = []	
 	    this.ctx = ctx;
+	    this.edge = edge
 	    this.acceleration = new Vektor(0, 0)
 	    this.maxForce = 1;
 	    this.maxSpeed = 4;
+	    this.colorIndex = ['780116','db7c26','f3d34a','d8572a','c32f27']
+	    this.color = this.colorIndex[random(this.colorIndex.length)]
 	    this.radius = Math.random() * 6
 	    this.acceleration = new Vektor(0, 0)
 	    this.velocity = new Vektor(Math.random() * 10 -5, Math.random() * 10 - 5)
 	    this.velocity.scaleMag(Math.random() + 0.5)
 	}
 	createVector (x, y) {
-		return new Vektor(x || Math.random() * 400, y ||  Math.random() * 400)
+		return new Vektor(x || Math.random() * this.edge, y ||  Math.random() * this.edge)
 	}
 	draw () {
+		this.ctx.save()
+		this.ctx.beginPath();
+		this.ctx.moveTo(this.position.x, this.position.y);
+		for (var i = 0 ; i < this.lastPos.length; i++) {
+			this.ctx.lineTo(this.lastPos[i].x, this.lastPos[i].y)
+		}
+		this.ctx.lineWidth = 20;
+		this.ctx.strokeStyle = "#" +this.color;
+		this.ctx.lineCap = 'round';
+		this.ctx.stroke()
+		this.ctx.restore() *
+
+		this.ctx.save()
+		this.ctx.fillStyle = '#FFFFFF'
+
 		this.ctx.beginPath();
 		this.ctx.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI);
-		this.ctx.stroke();
+		this.ctx.fill();
+		this.ctx.restore()
 	}
 	align(particles) {
 	    let perceptionRadius = 80;
@@ -86,15 +106,19 @@ export default class particle {
 	    return steering;
 	}
 	edges() {
-	    if (this.position.x > 400) {
+	    if (this.position.x > this.edge) {
 	      this.position.x = 0;
+	      this.lastPos= []
 	    } else if (this.position.x < 0) {
-	      this.position.x = 400;
+	      this.position.x = this.edge;
+	      this.lastPos= []
 	    }
-	    if (this.position.y > 400) {
+	    if (this.position.y > this.edge) {
 	      this.position.y = 0;
+	      this.lastPos= []
 	    } else if (this.position.y < 0) {
-	      this.position.y = 400;
+	      this.position.y = this.edge;
+	      this.lastPos= []
 	    }
 	}
 	compute (paricules) {
@@ -108,8 +132,9 @@ export default class particle {
 	update () {
 		this.velocity.add(this.acceleration)
 		this.velocity.limit(this.maxSpeed)
-
 		this.position.add(this.velocity)
+		this.lastPos.unshift(new Vektor(this.position))
+		this.lastPos.length > this.lastPosLength && this.lastPos.pop()
 		this.acceleration.mult(0);
 	}
 }

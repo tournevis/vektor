@@ -4,12 +4,12 @@ import Particle from './particle.js'
 let ctx , canvas, qTree, lastCalledTime
 let PARTICLES_ARRAY = []
 let  mousePos = new Point(0,0)
-const PARTICLE_NUM = 200
-
+const PARTICLE_NUM = 300
+const CANVAS_SIZE = 800
 let setup = () => {
  	canvas = document.createElement('canvas')
- 	canvas.height = 400
- 	canvas.width = 400
+ 	canvas.height = CANVAS_SIZE
+ 	canvas.width = CANVAS_SIZE
  	let container = document.querySelector('#canvas-container')
  	container.append(canvas)
   canvas.addEventListener('mousemove', function (ev) {
@@ -19,14 +19,14 @@ let setup = () => {
   })
  	ctx = canvas.getContext('2d')
   for (var i = 0; i <= PARTICLE_NUM; i++) {
-  	PARTICLES_ARRAY.push(new Particle(Math.random() * 400,Math.random() * 400,ctx))
+  	PARTICLES_ARRAY.push(new Particle(Math.random() * CANVAS_SIZE,Math.random() * CANVAS_SIZE,ctx, CANVAS_SIZE))
   }
   draw()
   /*
   let boundary = new Rect(10,10, 380, 380)
   qTree = new Quadtree(boundary, 8 )
   for (var i = 0; i < 190; i++) {
-    let p = new Point(random(400), random(400))
+    let p = new Point(random(CANVAS_SIZE), random(CANVAS_SIZE))
     qTree.insert(p)
   }
   rangeDraw()*/
@@ -35,7 +35,7 @@ let setup = () => {
 document.addEventListener("DOMContentLoaded", setup)
 
 let rangeDraw = () => {
-  ctx.clearRect(0, 0, 400, 400);
+  ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   ctx.strokeStyle= "#0F0"
   ctx.rect(mousePos.x - 50, mousePos.y - 50, 100, 100)
   ctx.stroke()
@@ -54,10 +54,15 @@ let rangeDraw = () => {
 }
 
 let draw = () => {
-	ctx.clearRect(0, 0, 400, 400);
-  let boundary = new Rect(0, 0, 400, 400)
-  qTree = new Quadtree(boundary, 6)
-  for (var i = PARTICLES_ARRAY.length - 1; i >= 0; i--) {
+  ctx.save()
+  ctx.fillStyle ='rgba(30,30,30,0.4)'
+  ctx.rect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
+  ctx.fill()
+  ctx.restore()
+
+  let boundary = new Rect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
+  qTree = new Quadtree(boundary, 8)
+  for (var i = PARTICLES_ARRAY.length - 1; i > 0; i--) {
     let p = PARTICLES_ARRAY[i]
     let point = new Point(p.position.x, p.position.y, p)
 		p.edges()
@@ -72,6 +77,6 @@ let draw = () => {
     var other = qTree.query(range)
 		p.compute(other)
 	}
-  qTree.show(ctx)
+  //qTree.show(ctx)
 	window.requestAnimationFrame(draw)
 }

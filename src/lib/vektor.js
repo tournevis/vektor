@@ -2,7 +2,11 @@
 
 export default class Vektor {
   constructor(x, y, z) {
-    if (x instanceof Array) {
+    if (x instanceof Vektor) {
+      this.x = x.x || 0
+      this.y = x.y || 0
+      this.z = x.z || 0
+    } else if (x instanceof Array) {
       this.x = arguments[0] || 0
       this.y = arguments[1] || 0
       this.z = arguments[2] || 0

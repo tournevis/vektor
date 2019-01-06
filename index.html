@@ -2,6 +2,9 @@
 <html>
 <head>
 	<title>Exp</title>
+	<style>
+@import url('https://fonts.googleapis.com/css?family=Muli');
+</style>
 </head>
 <style type="text/css">
 	body, html{
@@ -9,29 +12,116 @@
 		margin:0;
 		padding: 0;
 		position: relative;
+		font-family: 'Muli', sans-serif;
 	}
 	canvas{
 		display:block;
 	}
 	.app-container{
 		width:100vw;
-		height: 100vh;
+		height:500px;
 		position: relative;
 		display: block;
+	}
+	.background-white{
+		background: white;
+		position: absolute;
+		bottom: 0;
+		left:0;
+		width: 100%;
+		height: 250px;
 	}
 	#canvas-container{
 		position: absolute;
 		top:50%;
 		left:50%;
 		transform: translate(-50%,-50%);
-		background: white;
 		box-shadow: 0 0 10px 4px rgba(0,0,0,0.1);
+	}
+	#canvas-container > canvas{
+		border-radius: 3px;
+	}
+	.custom-range-container{
+	    background: white;
+    	padding: 0 10%;
+    	padding-bottom: 40px;
+    	 display: flex;
+    	 justify-content: space-evenly;
+
+	}
+	.force-input-container{
+		position: relative;
+		text-align:left;
+	    align-self: flex-start;
+	}
+	#particleSlide{
+		width: 100%;
 	}
 </style>
 <body>
 	<div class="app-container">
-		<div id="canvas-container">
 
+		<div class="background-white">
+			
+		</div>
+		<div id="canvas-container">
+		</div>
+	</div>
+	<div class="custom-part">
+		<div class="custom-range-container">
+			<div class="force-input-container">
+				<h3>Alignement:</h3>
+				<div class="force-input-container">
+					<div class="custom-range-input">
+	  					<label for="alignement">Activate</label>
+						<input type="checkbox" class="active-force " name="active" checked>
+					</div>
+					<div class="custom-range">
+						<p> Force </p>
+						<input type="range" class="slide" min="0" max="2" step="0.1">	
+					</div>
+				</div>
+			</div>
+			<div class="force-input-container">
+				<h3>Cohesion:</h3>
+				<div class="force-input-container">
+					<div class="custom-range-input">
+	  					<label for="alignement">Activate</label>
+						<input type="checkbox" class="active-force " name="active" checked>
+					</div>
+					<div class="custom-range">
+						<p> Force </p>
+						<input type="range" class="slide" min="0" max="2" step="0.1">	
+					</div>
+				</div>
+			</div>
+			<div class="force-input-container">
+				<h3>Separation:</h3>
+				<div class="force-input-container">
+					<div class="custom-range-input">
+	  					<label for="alignement">Activate</label>
+						<input type="checkbox" class="active-force " name="active" checked>
+					</div>
+					<div class="custom-range">
+						<p> Force </p>
+						<input type="range" class="slide" min="0" max="2" step="0.1">	
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="custom-range-container">
+			<div class="force-input-container">
+				<h3>Distance de test: <span id="rangeQueryDisplay"></span></h3>
+				<div class="custom-range">
+					<input type="range" id="rangeQuerySlide" min="0" max="200" step="1">	
+				</div>
+			</div>
+			<div class="force-input-container">
+				<h3>PARTICULE number:<span id="particleNumDisplay"></span></h3>
+				<div class="custom-range">
+					<input type="range" id="particleSlide" min="0" value="30"max="1000" step="1">	
+				</div>
+			</div>
 		</div>
 	</div>
 </body>

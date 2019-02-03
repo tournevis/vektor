@@ -1,8 +1,7 @@
-import { Vektor, dist, random } from './lib/index.js'
-import { forceSliders, forceCheckboxes } from './main.js'
+import { Vektor, dist, random } from '@/lib/index.js'
 export default class particle {
 	constructor(x, y, ctx, edge) {
-			this.position =  new Vektor(x, y)
+		this.position =  new Vektor(x, y)
 	    this.lastPosLength = 4
 	    this.lastPos = []	
 	    this.ctx = ctx;
@@ -12,7 +11,7 @@ export default class particle {
 	    this.maxSpeed = 4;
 	    this.colorIndex = ['780116','db7c26','f3d34a','d8572a','c32f27']
 	    this.color = this.colorIndex[random(this.colorIndex.length)]
-	    this.radius = Math.random() * 6
+	    this.radius = Math.random() * 4 + 2
 	    this.acceleration = new Vektor(0, 0)
 	    this.velocity = new Vektor(Math.random() * 10 - 5, Math.random() * 10 - 5)
 	    this.velocity.scaleMag(Math.random() + 0.5)
@@ -47,7 +46,7 @@ export default class particle {
 	    let steering = new Vektor(0, 0)
 	    let total = 0
 	    for (let others of particles) {
-			let other = others.ref
+			let other = others
 			let d = dist(this.position.x, this.position.y, other.position.x, other.position.y)
 			if (other != this && d < perceptionRadius) {
 				steering.add(other.velocity)
@@ -67,7 +66,7 @@ export default class particle {
 	    let steering = new Vektor(0, 0)
 	    let total = 0;
 	    for (let others of particles) {
-				let other = others.ref
+				let other = others
 				let d = dist(this.position.x, this.position.y, other.position.x, other.position.y)
 				if (other != this && d < perceptionRadius) {
 					steering.add(other.position);
@@ -106,6 +105,19 @@ export default class particle {
 	    }
 	    return steering;
 	}
+	forces (particles) {
+		let perceptionRadius = 20;
+	    let steering = new Vektor(0, 0)
+	    let total = 0;
+	    for (let other of particles) {
+	    	let d = dist(this.position.x, this.position.y, other.position.x, other.position.y)
+			if (other != this && d < perceptionRadius) {
+				this.velocity.add(other.force)
+		    	this.velocity.limit(this.maxForce * 10)
+		    	return
+			}
+	    }
+	}
 	edges() {
 	    if (this.position.x > this.edge) {
 	      this.position.x = 0
@@ -123,25 +135,20 @@ export default class particle {
 	    }
 	}
 	compute (paricules) {
-		if (forceCheckboxes[0]) {
-			let alignment = this.align(paricules)
-			alignment.mult(forceSliders[0])
-			this.acceleration.add(alignment)
-		}
-		if (forceCheckboxes[1]) {
-	    	let cohesion = this.cohesion(paricules)
-	    	cohesion.mult(forceSliders[1])
-	    	this.acceleration.add(cohesion)
-	    }
-		if (forceCheckboxes[2]) {
-	    	let separation = this.separation(paricules)
-	    	separation.mult(forceSliders[2])
-	    	this.acceleration.add(separation)
-    	}
+		//let alignment = this.align(paricules)
+		//this.acceleration.add(alignment)
+
+		let force =  this.forces(paricules)
+		this.acceleration.add(force)
+	    //let cohesion = this.cohesion(paricules)	
+	    //this.acceleration.add(cohesion)
+	    //let separation = this.separation(paricules)
+	    //this.acceleration.add(separation)
 	}
 	update () {
 		this.velocity.add(this.acceleration)
 		this.velocity.limit(this.maxSpeed)
+
 		this.position.add(this.velocity)
 		this.lastPos.unshift(new Vektor(this.position))
 		this.lastPos.length > this.lastPosLength && this.lastPos.pop()

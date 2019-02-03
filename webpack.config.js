@@ -8,9 +8,12 @@
 // 8. Browse to http://localhost:8080/dist/
 
 const path = require('path')
+const argv = require('yargs').argv
+const APP_DIR_NAME = argv.project || '003'
+const APP_DIR = path.resolve(__dirname, `./src/${APP_DIR_NAME}`);
 
 module.exports = {
-  entry: './src/main.js',
+  entry: APP_DIR + '/main.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js'
@@ -21,6 +24,11 @@ module.exports = {
         loader: 'babel-loader',
         exclude: /node_modules/
 	  }],
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src/')
+    }
   },
   devServer: {
     historyApiFallback: true,

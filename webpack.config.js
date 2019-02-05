@@ -9,7 +9,7 @@
 
 const path = require('path')
 const argv = require('yargs').argv
-const APP_DIR_NAME = argv.project || '003'
+const APP_DIR_NAME = argv.project || '004'
 const APP_DIR = path.resolve(__dirname, `./src/${APP_DIR_NAME}`);
 
 module.exports = {

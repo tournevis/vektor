@@ -1,15 +1,25 @@
 export default class gcode{
 	constructor() {
-		this.path = ''
-		this.pathElements = []
+		this.path = 'M 100 100 L 300 100 l 200,300h200v-40'
+		this.coords = []
+		this.commands = []
 		this.lastCoord = {}
-		this.regex = /([a-zA-Z])?\s((?:[0-9-+,]+\s?)*)/g
+		this.regex = /([a-zA-Z])+\s?((?:[0-9-+.,]+\s?)*)/g
 	}
 	parseSVG (path) {
-		this.pathElements = []
+		this.coords = []
+		this.commands = []
 		this.path = path
 		this.execRegex()
+		return this.coords
 	}
+
+	parseAndRound(value) {
+		if (typeof value === 'number') return value
+		let f = parseFloat(value)
+		return Number(Math.round((f / 2 )+'e'+3)+'e-'+3)
+	}
+
 	execRegex() {
 		let result
 		let prev
@@ -17,19 +27,43 @@ export default class gcode{
 			let type = result[1]
 			let coord = result[2]
 			let endline = result[3]
-			switch (type) {
+			switch (type.toUpperCase()) {
 				case 'M':
-					coord = coord.split(' ')
-					var mapCoord = {x: coord[0], y: coord[1]}
-					this.moveTo(prev, mapCoord)
+					coord = coord.trim().split(/[\s,]+/)
+					type === type.toUpperCase()
+						? this.moveTo(type, coord)
+						: this.moveFromTo(type, coord)
 					break;
-				case 'L': 
-					coord = coord.split(' ')
-					var mapCoord = {x: coord[0], y: coord[1]}
-					this.lineTo(prev, mapCoord)
+				case 'L':
+					coord = coord.trim().split(/[\s,]+/)
+					type === type.toUpperCase()
+						? this.moveTo(type, coord)
+						: this.moveFromTo(type, coord)
+					break;
+				case 'H':
+					coord = coord.trim().split(/[\s,]+/)
+					coord.push(type === type.toUpperCase()
+							? this.coords[this.coords.length - 1].x
+							: '0'
+						)
+					type === type.toUpperCase()
+						? this.moveTo(type, coord)
+						: this.moveFromTo(type, coord)
+					break;
+				case 'V':
+					coord = coord.trim().split(/[\s,]+/)
+					coord.unshift(
+						type === type.toUpperCase()
+							? this.coords[this.coords.length - 1].y
+							: '0'
+						)
+					
+					type === type.toUpperCase()
+						? this.moveTo(type, coord)
+						: this.moveFromTo(type, coord)
 					break;
 				case 'C':
-					coord = coord.split(',')
+					coord = coord.split(/[\s,]+/)
 					var mapCoord = coord.map(el => {
 						var tmp = el.trim().split(' ')
 						return {
@@ -44,7 +78,7 @@ export default class gcode{
 			prev = type
 		}
 		this.backToZero()
-		return this.pathElements.join(this.endLine())
+		return this.coords//this.pathElements.join(this.endLine())
 	}	
 	penUp () {
 		return 'S0 M5'
@@ -55,21 +89,29 @@ export default class gcode{
 	endLine () {
 		return '\n'
 	}
-	moveTo (prev, coord) {
-		if (prev !== 'M') {
-			this.pathElements.push(this.penUp())
+	moveTo (type, coord) {
+		var mapCoord = {x: coord[0], y: coord[1]}
+		let isUpperCase = type === type.toUpperCase()
+		let lastCoord = this.coords[this.coords.length - 1]
+		var obj = {
+			type: type,
+			position: isUpperCase ? 'absolute': 'relative',
+			x: this.parseAndRound(mapCoord.x),
+			y: this.parseAndRound(mapCoord.y)
 		}
-		var line = `X${this.parseAndRound(coord.x)} Y${this.parseAndRound(coord.y)}`
-		this.pathElements.push(line)
-		this.lastCoord = coord
+		this.coords.push(obj)
 	}
-	lineTo (prev, coord) {
-		if (prev === 'M') {
-			this.pathElements.push(this.penDown())
+	moveFromTo(type, coord) {
+		var mapCoord = {x: coord[0], y: coord[1]}
+		let isUpperCase = type === type.toUpperCase()
+		let lastCoord = this.coords[this.coords.length - 1]
+		var obj = {
+			type: type,
+			position: isUpperCase ? 'absolute': 'relative',
+			x: lastCoord.x + this.parseAndRound(mapCoord.x),
+			y: lastCoord.y + this.parseAndRound(mapCoord.y)
 		}
-		var line = `X${this.parseAndRound(coord.x)} Y${this.parseAndRound(coord.y)}`
-		this.pathElements.push(line)
-		this.lastCoord = coord
+		this.coords.push(obj)
 	}
 	cubicTo (prev, coord) {	
 		
@@ -89,11 +131,6 @@ export default class gcode{
 	    return a + (-a * 3 + pct * (3 * a - a * pct)) * pct + (3 * b + pct * (-6 * b + b * 3 * pct)) * pct + (c * 3 - c * 3 * pct) * t2 + d * t3;
 	}
 
-	parseAndRound(value) {
-	 let f = parseFloat(value)
-	 return Number(Math.round((f / 2 )+'e'+3)+'e-'+3)
-	}
-
 	map () {
 
 	}
@@ -101,7 +138,7 @@ export default class gcode{
 
 	}
 	backToZero() {
-		this.pathElements.push(this.penUp())
-		this.pathElements.push('X0 Y0')
+		this.commands.push(this.penUp())
+		this.commands.push('X0 Y0')
 	}
 }

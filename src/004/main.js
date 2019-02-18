@@ -6,7 +6,7 @@ let size = {
 	height: 0
 }
 const paths = [
-	'M 100 100 L 300 100 L 200 300 C 120 20, 180 20, 170 10'
+	'M 100 100 L 300 100 l-100,100h200v-40'
 ]
 let parser =  new Gcode()
 let setup = () => {

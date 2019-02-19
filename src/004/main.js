@@ -22,7 +22,7 @@ let setup = () => {
 	frame.id= "svg-render"
 	for (var i = paths.length - 1; i >= 0; i--) {
 		let p = document.createElementNS(ns, 'path')
-		p.setAttributeNS(null, 'd', paths[i])
+		p.setAttributeNS(null, 'd', paths[0])
 		p.setAttributeNS(null, 'fill', 'none')
 		p.setAttributeNS(null, 'stroke', 'black')
 		frame.append(p)
@@ -46,10 +46,25 @@ let download = () => {
 let parse = () => {
 	let parsed = []
 	for (var i = paths.length - 1; i >= 0; i--) {
-		parsed.push(parser.parseSVG(paths[i]))
+		parsed.push(parser.parseSVG(paths[0]))
 	}
-	
+	parsed = parsed[0]
 	console.log(parsed)
+	
+	let render = document.querySelector('#canvas-el')
+  	let ctx = render.getContext('2d')
+  	ctx.beginPath();
+	ctx.moveTo(10.2, 10.2);
+	ctx.strokeStyle = "#FF0000";
+	for (var i =  0 ; i < parsed.length; i++) {
+		if (parsed[i].type == 'M'){
+			ctx.moveTo(parsed[i].x, parsed[i].y)
+		} else {
+			ctx.lineTo(parsed[i].x, parsed[i].y)
+		}
+		
+	}
+	ctx.stroke();
 }
 document.addEventListener("DOMContentLoaded", setup)
 

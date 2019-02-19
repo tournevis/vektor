@@ -1,6 +1,6 @@
 export default class gcode{
 	constructor() {
-		this.path = 'M 100 100 L 300 100 l 200,300h200v-40'
+		this.path = ''
 		this.coords = []
 		this.commands = []
 		this.lastCoord = {}
@@ -63,7 +63,7 @@ export default class gcode{
 						: this.moveFromTo(type, coord)
 					break;
 				case 'C':
-					coord = coord.split(/[\s,]+/)
+					coord = coord.split(/[,]+/)
 					var mapCoord = coord.map(el => {
 						var tmp = el.trim().split(' ')
 						return {
@@ -71,13 +71,26 @@ export default class gcode{
 							y: tmp[1]
 						}
 					})
-					mapCoord.unshift(this.lastCoord)
-					this.cubicTo(prev, mapCoord)
+					this.cubicTo(type, mapCoord)
+					break;
+				case 'S':
+					coord = coord.split(/[,]+/)
+					// todo : Store last controle point and calc hi image through the last point.
+					var mapCoord = coord.map(el => {
+						var tmp = el.trim().split(' ')
+						return {
+							x: tmp[0],
+							y: tmp[1]
+						}
+					})
+					this.cubicTo(type, maxpCoord)
+					break;
+				case 'Z':
+					this.backToZero()
 					break;
 			}
 			prev = type
 		}
-		this.backToZero()
 		return this.coords//this.pathElements.join(this.endLine())
 	}	
 	penUp () {
@@ -104,7 +117,7 @@ export default class gcode{
 	moveFromTo(type, coord) {
 		var mapCoord = {x: coord[0], y: coord[1]}
 		let isUpperCase = type === type.toUpperCase()
-		let lastCoord = this.coords[this.coords.length - 1]
+		let lastCoord = this.getLastCoord()
 		var obj = {
 			type: type,
 			position: isUpperCase ? 'absolute': 'relative',
@@ -113,17 +126,30 @@ export default class gcode{
 		}
 		this.coords.push(obj)
 	}
-	cubicTo (prev, coord) {	
-		
-		debugger
+	cubicTo (type, coord) {	
+		var step = 3
+		var lastCoord = this.getLastCoord()
+		for (var i = 0; i <= 1; i += step / 100) {
+			this.coords.push(this.getCubicBezierXYatPercent(lastCoord, coord[0], coord[1], coord[2] ,i))
+		}
 	}
 	getCubicBezierXYatPercent(startPt, controlPt1, controlPt2, endPt, percent) {
-		var x = CubicN(percent, startPt.x, controlPt1.x, controlPt2.x, endPt.x);
-		var y = CubicN(percent, startPt.y, controlPt1.y, controlPt2.y, endPt.y);
+		var x = this.CubicN(percent, startPt.x, controlPt1.x, controlPt2.x, endPt.x);
+		var y = this.CubicN(percent, startPt.y, controlPt1.y, controlPt2.y, endPt.y);
 		return ({
+					type: 'C',
+					position: 'relative',
 	        x: x,
 	        y: y
 	    });
+	}
+	getQuadraticBezierXYatPercent(startPt, controlPt, endPt, percent) {
+    var x = Math.pow(1 - percent, 2) * startPt.x + 2 * (1 - percent) * percent * controlPt.x + Math.pow(percent, 2) * endPt.x;
+    var y = Math.pow(1 - percent, 2) * startPt.y + 2 * (1 - percent) * percent * controlPt.y + Math.pow(percent, 2) * endPt.y;
+    return ({
+        x: x,
+        y: y
+    });
 	}
 	CubicN(pct, a, b, c, d) {
 	    var t2 = pct * pct;
@@ -136,6 +162,9 @@ export default class gcode{
 	}
 	default () {
 
+	}
+	getLastCoord () {
+		return this.coords[this.coords.length - 1]
 	}
 	backToZero() {
 		this.commands.push(this.penUp())

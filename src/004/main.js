@@ -5,8 +5,8 @@ let size = {
 	width: 0,
 	height: 0
 }
-const paths = [
-	'M 100 100 L 300 100 l-100,100h200v-40 M 100 10 C 50 20, 20 50, 10 100 C 20 50, 150 20, 100 10 S 150 150, 180 80 S 250 100, 80 30'
+var paths = [
+	'M 100 100 L 300 80 l-100,100h200v-40 M 100 10 C 50 20, 20 50, 10 100 C 20 50, 150 20, 100 10 S 150 150, 180 80 S 250 100, 80 30v12'
 ]
 let parser =  new Gcode()
 let setup = () => {
@@ -15,6 +15,9 @@ let setup = () => {
 	let container = document.querySelector('#canvas-container')
 	var ns = 'http://www.w3.org/2000/svg'
 	let frame = document.createElementNS(ns, 'svg')
+	var render = document.querySelector('#canvas-el')
+	render.width = 1000
+	render.height = 600
 	size.width = window.innerWidth 
 	size.height = window.innerHeight * 0.6
 	frame.setAttributeNS(null, 'width', size.width)
@@ -29,6 +32,9 @@ let setup = () => {
 	}
 	container.append(frame)
 	//draw()
+
+	//loadSvg()
+	
 }
 let download = () => {
 	activeRenderer = false;
@@ -46,9 +52,8 @@ let download = () => {
 let parse = () => {
 	let parsed = []
 	for (var i = paths.length - 1; i >= 0; i--) {
-		parsed.push(parser.parseSVG(paths[0]))
+		parsed.push(parser.parseSVG(paths[i]))
 	}
-	parsed = parsed[0]
 	console.log(parsed)
 	
 	let render = document.querySelector('#canvas-el')
@@ -57,14 +62,29 @@ let parse = () => {
 	ctx.moveTo(10.2, 10.2);
 	ctx.strokeStyle = "#FF0000";
 	for (var i =  0 ; i < parsed.length; i++) {
-		if (parsed[i].type == 'M'){
-			ctx.moveTo(parsed[i].x, parsed[i].y)
-		} else {
-			ctx.lineTo(parsed[i].x, parsed[i].y)
+		for (var j =  0 ; j < parsed[i].length; j++) {
+			let p = parsed[i]
+			if (p[j].type == 'M'){
+				ctx.moveTo(p[j].x, p[j].y)
+			} else {
+				ctx.lineTo(p[j].x, p[j].y)
+				ctx.stroke();
+			}
 		}
-		
+
 	}
-	ctx.stroke();
+}
+let loadSvg = () => {
+	let medal = document.getElementById('medal')
+	medal.addEventListener("load", function () {
+		var svgDoc = medal.contentDocument;
+		// Get one of the SVG items by ID;
+		var pathsBuffer = svgDoc.getElementsByTagName("path")
+		for (var i = pathsBuffer.length - 1; i >= 0; i--) {
+			var d = pathsBuffer[i].getAttribute('d')
+			paths.push(d)
+		}
+	})
 }
 document.addEventListener("DOMContentLoaded", setup)
 

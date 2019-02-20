@@ -5,7 +5,12 @@ export default class gcode{
 		this.commands = []
 		this.lastCoord = {}
 		this.lastControlPoint = ''
-		this.precision = 100
+		this.precision = 10
+		this.scaleFactor = 1
+		this.translatePoint = {
+			x: 1 * this.scaleFactor,
+			y: 1 * this.scaleFactor
+		}
 		this.regex = /([a-zA-Z])+\s?((?:[0-9-+.,]+\s?)*)/g
 	}
 	parseSVG (path) {
@@ -25,98 +30,104 @@ export default class gcode{
 			let endline = result[3]
 			switch (type.toUpperCase()) {
 				case 'M':
-					coord = coord.trim().split(/[\s,]+/)
-					type === type.toUpperCase()
-						? this.moveTo(type, coord)
-						: this.moveFromTo(type, coord)
+					coord = this.formatCoord(coord, type)
+					this.moveTo(type, coord)
 					break;
 				case 'L':
-					coord = coord.trim().split(/[\s,]+/)
-					type === type.toUpperCase()
-						? this.moveTo(type, coord)
-						: this.moveFromTo(type, coord)
+					coord = this.formatCoord(coord, type)
+					this.moveTo(type, coord)
 					break;
 				case 'H':
-					coord = coord.trim().split(/[\s,]+/)
-					coord.push(type === type.toUpperCase()
-							? this.coords[this.coords.length - 1].x
-							: '0'
-						)
-					type === type.toUpperCase()
-						? this.moveTo(type, coord)
-						: this.moveFromTo(type, coord)
+					coord = this.formatCoord(coord, type)
+					
+					this.moveTo(type, coord)
 					break;
 				case 'V':
-					coord = coord.trim().split(/[\s,]+/)
-					coord.unshift(
-						type === type.toUpperCase()
-							? this.coords[this.coords.length - 1].y
-							: '0'
-						)
-					type === type.toUpperCase()
-						? this.moveTo(type, coord)
-						: this.moveFromTo(type, coord)
+					coord = this.formatCoord(coord, type)
+					this.moveTo(type, coord)
 					break;
 				case 'C':
-					var mapCoord = this.formatCoord(coord)
-					this.cubicTo(type, mapCoord)
+					var mapCoord = this.formatCoord(coord, type)
+					this.cubicTo(type, mapCoord, type === type.toUpperCase())
 					break;
 				case 'S':
-					var mapCoord = this.formatCoord(coord)
+					var mapCoord = this.formatCoord(coord, type)
 					this.cubicShortHandTo(type, mapCoord)
 					break;
 				case 'Q':
-					var mapCoord = this.formatCoord(coord)
+					var mapCoord = this.formatCoord(coord, type)
 					this.quadraticTo(type, mapCoord)
 					break;
 				case 'T':
-					var mapCoord = this.formatCoord(coord)
+					var mapCoord = this.formatCoord(coord, type)
 					this.quadraticShortHandTo(type, mapCoord)
 					break;
 				case 'Z':
 					this.backToZero()
+					break;
+				default:
+					debugger
 					break;
 			}
 			prev = type
 		}
 		return this.coords //this.pathElements.join(this.endLine())
 	}
-	formatCoord (str) {
-		var coord = str.split(/[,]+/)
-		var mapCoord = coord.map(el => {
-			var tmp = el.trim().split(' ')
-			return {
-				x: tmp[0],
-				y: tmp[1]
-			}
-		})
+	formatCoord (str, type) {
+		var coord = str.match(/-?\d*(\.\d+)?/g).filter(function(n){ return n != '' })
+		var last = this.getLastCoord()
+		if (type === 'H') coord.push(last.y)
+		else if (type === 'V') coord.unshift(last.x)
+		else if (type === 'h') coord.push(0)
+		else if (type === 'v') coord.unshift(0)
+
+		var mapCoord = []
+
+		for (var i = 0 ; i < coord.length - 1 ; i+=2) {
+			mapCoord.push({
+				x: (parseFloat(coord[i]) * this.scaleFactor) + this.translatePoint.x,
+				y: (parseFloat(coord[i + 1]) * this.scaleFactor) + this.translatePoint.y
+			})
+		}
 		return mapCoord
 	}
+	getRelativeCoord (coords) {
+		var last = this.getLastCoord()
+		for (var i = 0; i < coords.length ; i++) {
+			coords[i] = {
+				x: last.x + coords[i].x,
+				y: last.y + coords[i].y
+			}
+		}
+		return coords
+	}
 	moveTo (type, coord) {
-		var mapCoord = {x: coord[0], y: coord[1]}
 		let isUpperCase = type === type.toUpperCase()
+
+		var mapCoord = isUpperCase ? coord[0] : this.getRelativeCoord(coord)[0]
 		var obj = {
 			type: type,
 			position: isUpperCase ? 'absolute': 'relative',
-			x: this.parseAndRound(mapCoord.x),
-			y: this.parseAndRound(mapCoord.y)
+			x: mapCoord.x,
+			y: mapCoord.y
 		}
 		this.coords.push(obj)
 	}
 	moveFromTo(type, coord) {
-		var mapCoord = {x: coord[0], y: coord[1]}
+		var mapCoord = coord[0]
 		let isUpperCase = type === type.toUpperCase()
-		let lastCoord = this.getLastCoord()
+		mapCoord = this.getRelativeCoord(mapCoord)
 		var obj = {
 			type: type,
 			position: isUpperCase ? 'absolute': 'relative',
-			x: lastCoord.x + this.parseAndRound(mapCoord.x),
-			y: lastCoord.y + this.parseAndRound(mapCoord.y)
+			x: mapCoord.x,
+			y: mapCoord.y
 		}
 		this.coords.push(obj)
 	}
-	cubicTo (type, coord) {
+	cubicTo (type, coord, isAbsolute) {
 		var lastCoord = this.getLastCoord()
+		if (!isAbsolute) coord = this.getRelativeCoord(coord)
 		for (var i = 0; i <= 1; i += 1 / this.precision) {
 			this.coords.push(this.getCubicBezierXYatPercent(lastCoord, coord[0], coord[1], coord[2] ,i))
 		}
@@ -150,7 +161,6 @@ export default class gcode{
 		var y = this.CubicN(percent, startPt.y, controlPt1.y, controlPt2.y, endPt.y);
 		return ({
 			type: 'C',
-			position: 'relative',
 	        x: x,
 	        y: y
 	    });

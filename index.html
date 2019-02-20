@@ -36,6 +36,9 @@
 	}
 	#canvas-container > canvas{
 		border-radius: 3px;
+
+	    position: absolute;
+	    top: 0;
 	}
 	#download-button{
 		cursor: pointer;
@@ -55,12 +58,18 @@
 	    align-self: center;
     	width: 100%;
 	}
+	#medal{
+		width: 400px;
+    	opacity: 0.2;
+	}
 </style>
 <body>
 	<div class="app-container">
 		<div id="canvas-container">
+			<!--	<object id="medal" data="src/shape.svg"></object>-->
 			<canvas id="canvas-el"></canvas>
 		</div>
+
 	</div>
 	<div id="download-button">
 		<p class="dl-p"> ⬇️ </p>
